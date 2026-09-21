@@ -20,6 +20,8 @@ const DOH_CONFIG = {
   },
   bank: { name: "United Bank for Africa (UBA)", account: "1027342537", acctName: "Dynasty of Hope Foundation" },
   storageKey: "doh_submissions",
+  dbUrl: "",          // paste Google Apps Script web-app URL here (or set via Admin > Settings)
+  dbKey: "DOHF-2026", // must match KEY in google-apps-script/Code.gs
   adminPassKey: "doh_admin_pass",
   defaultAdminPass: "hope2023" // CHANGE after first login (Admin > Settings)
 };
@@ -34,6 +36,26 @@ const DOH_TYPE_LABEL = {
   register: "Event Registration",
   pledge: "Donation Pledge"
 };
+/* ---- Online database (Google Sheet via Apps Script) ---- */
+function DOH_GetDb() {
+  let url = DOH_CONFIG.dbUrl || "", key = DOH_CONFIG.dbKey || "";
+  try {
+    url = localStorage.getItem("doh_db_url") || url;
+    key = localStorage.getItem("doh_db_key") || key;
+  } catch (e) {}
+  return { url: url.trim(), key: key };
+}
+function DOH_SendOnline(type, data, recId) {
+  const db = DOH_GetDb();
+  if (!db.url) return Promise.resolve(false);
+  return fetch(db.url, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ key: db.key, id: recId, type: type, data: data })
+  }).then(() => true).catch(() => false);
+}
+
 function DOH_SendEmail(type, data, recId) {
   const payload = Object.assign({}, data, {
     _subject: "New " + (DOH_TYPE_LABEL[type] || "Submission") + " [" + recId + "] - Dynasty of Hope Foundation",
@@ -129,6 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try { rec = DOH_Store.add(form.getAttribute("data-store"), data); }
       catch (e) { rec = { id: "DOH-" + Date.now().toString(36).toUpperCase() }; }
       DOH_SendEmail(form.getAttribute("data-store"), data, rec.id);
+      DOH_SendOnline(form.getAttribute("data-store"), data, rec.id);
       const ok = form.querySelector(".form-success");
       if (ok) {
         ok.innerHTML = ok.innerHTML.replace("{{ID}}", rec.id);

@@ -45,6 +45,7 @@
           <button class="tab-btn active" data-tab="volunteer">Volunteers</button>
           <button class="tab-btn" data-tab="register">Registrations</button>
           <button class="tab-btn" data-tab="pledge">Pledges</button>
+          <button class="tab-btn" data-tab="online">Online Database</button>
           <button class="tab-btn" data-tab="settings">Settings</button>
         </div>
 
@@ -63,6 +64,12 @@
           <div class="table-scroll" id="table-pledge"></div>
         </div>
 
+        <div class="tab-panel" id="panel-online" style="display:none">
+          <div class="panel-head"><h2>All-Device Submissions (Google Sheet) <span id="online-status" style="font-size:0.8rem;color:var(--muted);font-weight:400"></span></h2>
+            <button class="btn btn-outline btn-sm" onclick="DOH_Admin.loadOnline()">⟳ Refresh</button></div>
+          <div class="table-scroll" id="table-online"></div>
+        </div>
+
         <div class="tab-panel" id="panel-settings" style="display:none">
           <div class="panel-head"><h2>Settings</h2></div>
           <div style="padding:26px;display:grid;gap:26px;grid-template-columns:1fr 1fr" class="form-grid">
@@ -73,6 +80,14 @@
               <button type="submit" class="btn btn-navy btn-sm">Update Password</button>
               <p id="pass-msg" style="margin-top:12px;font-size:0.88rem;color:var(--gold-dark)"></p>
             </form>
+            <div class="form-card" style="box-shadow:none;padding:20px;border:1px solid #e6eaf2">
+              <h3 style="margin-bottom:14px">Connect Online Database</h3>
+              <p style="color:var(--muted);font-size:0.86rem;margin-bottom:12px">One-time setup: create the Google Sheet bridge (see GOOGLE-SHEETS-SETUP.md), then paste the web-app URL here. Every submission — from every device — will appear in your Sheet and in the Online Database tab.</p>
+              <div class="form-group" style="margin-bottom:12px"><label>Apps Script Web-app URL</label><input type="url" id="db-url" placeholder="https://script.google.com/macros/s/…/exec"></div>
+              <div class="form-group" style="margin-bottom:16px"><label>Access Key</label><input type="text" id="db-key" value="DOHF-2026"></div>
+              <button class="btn btn-navy btn-sm" onclick="DOH_Admin.saveConnection()">Save Connection</button>
+              <p id="db-msg" style="margin-top:12px;font-size:0.88rem;color:var(--gold-dark)"></p>
+            </div>
             <div class="form-card" style="box-shadow:none;padding:20px;border:1px solid #e6eaf2">
               <h3 style="margin-bottom:14px">Data Management</h3>
               <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px">Every submission is <strong>emailed to Dynastyofhope2023@gmail.com</strong> (FormSubmit delivery — activate once by clicking the link in the first activation email). The tables below are this device's local copy: export to CSV regularly for backup, and use "Export All" before clearing.</p>

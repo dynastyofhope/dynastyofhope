@@ -1303,6 +1303,7 @@ table.admin-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; 
           <button class="tab-btn active" data-tab="volunteer">Volunteers</button>
           <button class="tab-btn" data-tab="register">Registrations</button>
           <button class="tab-btn" data-tab="pledge">Pledges</button>
+          <button class="tab-btn" data-tab="online">Online Database</button>
           <button class="tab-btn" data-tab="settings">Settings</button>
         </div>
 
@@ -1321,6 +1322,12 @@ table.admin-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; 
           <div class="table-scroll" id="table-pledge"></div>
         </div>
 
+        <div class="tab-panel" id="panel-online" style="display:none">
+          <div class="panel-head"><h2>All-Device Submissions (Google Sheet) <span id="online-status" style="font-size:0.8rem;color:var(--muted);font-weight:400"></span></h2>
+            <button class="btn btn-outline btn-sm" onclick="DOH_Admin.loadOnline()">⟳ Refresh</button></div>
+          <div class="table-scroll" id="table-online"></div>
+        </div>
+
         <div class="tab-panel" id="panel-settings" style="display:none">
           <div class="panel-head"><h2>Settings</h2></div>
           <div style="padding:26px;display:grid;gap:26px;grid-template-columns:1fr 1fr" class="form-grid">
@@ -1331,6 +1338,14 @@ table.admin-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; 
               <button type="submit" class="btn btn-navy btn-sm">Update Password</button>
               <p id="pass-msg" style="margin-top:12px;font-size:0.88rem;color:var(--gold-dark)"></p>
             </form>
+            <div class="form-card" style="box-shadow:none;padding:20px;border:1px solid #e6eaf2">
+              <h3 style="margin-bottom:14px">Connect Online Database</h3>
+              <p style="color:var(--muted);font-size:0.86rem;margin-bottom:12px">One-time setup: create the Google Sheet bridge (see GOOGLE-SHEETS-SETUP.md), then paste the web-app URL here. Every submission — from every device — will appear in your Sheet and in the Online Database tab.</p>
+              <div class="form-group" style="margin-bottom:12px"><label>Apps Script Web-app URL</label><input type="url" id="db-url" placeholder="https://script.google.com/macros/s/…/exec"></div>
+              <div class="form-group" style="margin-bottom:16px"><label>Access Key</label><input type="text" id="db-key" value="DOHF-2026"></div>
+              <button class="btn btn-navy btn-sm" onclick="DOH_Admin.saveConnection()">Save Connection</button>
+              <p id="db-msg" style="margin-top:12px;font-size:0.88rem;color:var(--gold-dark)"></p>
+            </div>
             <div class="form-card" style="box-shadow:none;padding:20px;border:1px solid #e6eaf2">
               <h3 style="margin-bottom:14px">Data Management</h3>
               <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px">Every submission is <strong>emailed to Dynastyofhope2023@gmail.com</strong> (FormSubmit delivery — activate once by clicking the link in the first activation email). The tables below are this device's local copy: export to CSV regularly for backup, and use "Export All" before clearing.</p>
@@ -1436,6 +1451,8 @@ const DOH_CONFIG = {
   },
   bank: { name: "United Bank for Africa (UBA)", account: "1027342537", acctName: "Dynasty of Hope Foundation" },
   storageKey: "doh_submissions",
+  dbUrl: "",          // paste Google Apps Script web-app URL here (or set via Admin > Settings)
+  dbKey: "DOHF-2026", // must match KEY in google-apps-script/Code.gs
   adminPassKey: "doh_admin_pass",
   defaultAdminPass: "hope2023" // CHANGE after first login (Admin > Settings)
 };
@@ -1450,6 +1467,26 @@ const DOH_TYPE_LABEL = {
   register: "Event Registration",
   pledge: "Donation Pledge"
 };
+/* ---- Online database (Google Sheet via Apps Script) ---- */
+function DOH_GetDb() {
+  let url = DOH_CONFIG.dbUrl || "", key = DOH_CONFIG.dbKey || "";
+  try {
+    url = localStorage.getItem("doh_db_url") || url;
+    key = localStorage.getItem("doh_db_key") || key;
+  } catch (e) {}
+  return { url: url.trim(), key: key };
+}
+function DOH_SendOnline(type, data, recId) {
+  const db = DOH_GetDb();
+  if (!db.url) return Promise.resolve(false);
+  return fetch(db.url, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ key: db.key, id: recId, type: type, data: data })
+  }).then(() => true).catch(() => false);
+}
+
 function DOH_SendEmail(type, data, recId) {
   const payload = Object.assign({}, data, {
     _subject: "New " + (DOH_TYPE_LABEL[type] || "Submission") + " [" + recId + "] - Dynasty of Hope Foundation",
@@ -1545,6 +1582,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try { rec = DOH_Store.add(form.getAttribute("data-store"), data); }
       catch (e) { rec = { id: "DOH-" + Date.now().toString(36).toUpperCase() }; }
       DOH_SendEmail(form.getAttribute("data-store"), data, rec.id);
+      DOH_SendOnline(form.getAttribute("data-store"), data, rec.id);
       const ok = form.querySelector(".form-success");
       if (ok) {
         ok.innerHTML = ok.innerHTML.replace("{{ID}}", rec.id);
@@ -1693,6 +1731,48 @@ const DOH_Admin = {
     a.download = `doh-${type}-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(a.href);
+  },
+
+  /* ---- online database (Google Sheet) ---- */
+  saveConnection() {
+    const url = document.getElementById("db-url").value.trim();
+    const key = document.getElementById("db-key").value.trim() || "DOHF-2026";
+    try {
+      localStorage.setItem("doh_db_url", url);
+      localStorage.setItem("doh_db_key", key);
+    } catch (e) {}
+    const msg = document.getElementById("db-msg");
+    msg.textContent = url ? "Connection saved on this device ✓" : "Connection removed.";
+    this.loadOnline();
+  },
+
+  loadOnline() {
+    const wrap = document.getElementById("table-online");
+    const status = document.getElementById("online-status");
+    const db = DOH_GetDb();
+    if (!db.url) {
+      wrap.innerHTML = `<div class="empty-state">Not connected yet. Paste your Google Apps Script web-app URL in <strong>Settings → Connect Online Database</strong> (see GOOGLE-SHEETS-SETUP.md in the package).</div>`;
+      if (status) status.textContent = "Not connected";
+      return;
+    }
+    if (status) status.textContent = "Loading…";
+    fetch(db.url + "?key=" + encodeURIComponent(db.key))
+      .then(r => r.json())
+      .then(res => {
+        if (!res.ok) throw new Error(res.error || "bad response");
+        if (status) status.textContent = res.count + " record(s) · synced " + new Date().toLocaleTimeString();
+        const rows = res.records || [];
+        rows.forEach(r => { if (r.data && !r.data.name) r.data.name = r.data.fullname; });
+        this.renderTable("table-online", rows, [
+          ["name", "Name"], ["type", "Type"], ["email", "Email"], ["phone", "Phone"],
+          ["event", "Event"], ["interest", "Interest"], ["category", "Category"],
+          ["amount", "Amount"], ["notes", "Notes"], ["message", "Message"]
+        ]);
+      })
+      .catch(err => {
+        if (status) status.textContent = "Error: " + err.message;
+        wrap.innerHTML = `<div class="empty-state">Could not read the online database. Check the web-app URL and key in Settings.</div>`;
+      });
   },
 
   clearAll() {

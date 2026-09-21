@@ -107,6 +107,48 @@ const DOH_Admin = {
     URL.revokeObjectURL(a.href);
   },
 
+  /* ---- online database (Google Sheet) ---- */
+  saveConnection() {
+    const url = document.getElementById("db-url").value.trim();
+    const key = document.getElementById("db-key").value.trim() || "DOHF-2026";
+    try {
+      localStorage.setItem("doh_db_url", url);
+      localStorage.setItem("doh_db_key", key);
+    } catch (e) {}
+    const msg = document.getElementById("db-msg");
+    msg.textContent = url ? "Connection saved on this device ✓" : "Connection removed.";
+    this.loadOnline();
+  },
+
+  loadOnline() {
+    const wrap = document.getElementById("table-online");
+    const status = document.getElementById("online-status");
+    const db = DOH_GetDb();
+    if (!db.url) {
+      wrap.innerHTML = `<div class="empty-state">Not connected yet. Paste your Google Apps Script web-app URL in <strong>Settings → Connect Online Database</strong> (see GOOGLE-SHEETS-SETUP.md in the package).</div>`;
+      if (status) status.textContent = "Not connected";
+      return;
+    }
+    if (status) status.textContent = "Loading…";
+    fetch(db.url + "?key=" + encodeURIComponent(db.key))
+      .then(r => r.json())
+      .then(res => {
+        if (!res.ok) throw new Error(res.error || "bad response");
+        if (status) status.textContent = res.count + " record(s) · synced " + new Date().toLocaleTimeString();
+        const rows = res.records || [];
+        rows.forEach(r => { if (r.data && !r.data.name) r.data.name = r.data.fullname; });
+        this.renderTable("table-online", rows, [
+          ["name", "Name"], ["type", "Type"], ["email", "Email"], ["phone", "Phone"],
+          ["event", "Event"], ["interest", "Interest"], ["category", "Category"],
+          ["amount", "Amount"], ["notes", "Notes"], ["message", "Message"]
+        ]);
+      })
+      .catch(err => {
+        if (status) status.textContent = "Error: " + err.message;
+        wrap.innerHTML = `<div class="empty-state">Could not read the online database. Check the web-app URL and key in Settings.</div>`;
+      });
+  },
+
   clearAll() {
     if (confirm("This deletes ALL stored submissions on this browser. Continue?")) {
       DOH_Store.clear();
