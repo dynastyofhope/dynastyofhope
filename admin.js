@@ -1,20 +1,16 @@
 /* ============================================================
    Dynasty of Hope Foundation — Admin dashboard
-   CENTRAL DATABASE MODEL:
-   - All submissions live in ONE place: the foundation's Google Sheet
-   - This dashboard is a password-protected window onto that Sheet
-   - Nothing is stored on the visitor's or admin's device
+   Simple online tracker: volunteer applications, event
+   registrations and donation pledges submitted on the website,
+   collated in ONE central Google Sheet and displayed here.
    ============================================================ */
 
 const DOH_Admin = {
   sessionKey: "doh_admin_session",
   records: [],
-  filter: "all",
 
   /* ---- auth ---- */
-  getPass() {
-    return localStorage.getItem(DOH_CONFIG.adminPassKey) || DOH_CONFIG.defaultAdminPass;
-  },
+  getPass() { return localStorage.getItem(DOH_CONFIG.adminPassKey) || DOH_CONFIG.defaultAdminPass; },
   login(pass) {
     if (pass === this.getPass()) { sessionStorage.setItem(this.sessionKey, "1"); return true; }
     return false;
@@ -29,13 +25,14 @@ const DOH_Admin = {
 
   esc(s) { const d = document.createElement("div"); d.textContent = String(s); return d.innerHTML; },
 
-  /* ---- central database access ---- */
+  /* ---- load the online tracker (central Google Sheet) ---- */
   load() {
     const db = DOH_GetDb();
     const status = document.getElementById("online-status");
-    const wrap = document.getElementById("table-central");
     if (!db.url) {
-      wrap.innerHTML = '<div class="empty-state">Central database not configured.</div>';
+      ["table-volunteer", "table-register", "table-pledge"].forEach(id => {
+        document.getElementById(id).innerHTML = '<div class="empty-state">Tracker not configured.</div>';
+      });
       return;
     }
     if (status) status.textContent = "Syncing…";
@@ -51,68 +48,59 @@ const DOH_Admin = {
         this.render();
       })
       .catch(err => {
-        if (status) status.textContent = "Error: " + err.message;
-        wrap.innerHTML = '<div class="empty-state">Could not reach the central database. Check your internet connection and reload.</div>';
+        if (status) status.textContent = "Sync error: " + err.message;
+        ["table-volunteer", "table-register", "table-pledge"].forEach(id => {
+          document.getElementById(id).innerHTML = '<div class="empty-state">Could not reach the online tracker. Check your connection and press Refresh.</div>';
+        });
       });
   },
 
-  filtered() {
-    return this.filter === "all" ? this.records : this.records.filter(r => r.type === this.filter);
-  },
-
   render() {
-    const recs = this.records;
-    const vols = recs.filter(r => r.type === "volunteer");
-    const regs = recs.filter(r => r.type === "register");
-    const pledges = recs.filter(r => r.type === "pledge");
+    const all = this.records;
+    const vols = all.filter(r => r.type === "volunteer");
+    const regs = all.filter(r => r.type === "register");
+    const pledges = all.filter(r => r.type === "pledge");
     const total = pledges.reduce((s, r) => s + (parseFloat(r.data.amount) || 0), 0);
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     set("stat-vol", vols.length);
     set("stat-reg", regs.length);
     set("stat-pledge", pledges.length);
     set("stat-total", "₦" + total.toLocaleString());
-    this.renderTable();
+
+    this.renderTable("table-volunteer", vols, [
+      ["name", "Name"], ["email", "Email"], ["phone", "Phone"],
+      ["location", "Location"], ["interest", "Interest"], ["message", "Message"]
+    ]);
+    this.renderTable("table-register", regs, [
+      ["name", "Name"], ["event", "Event"], ["category", "Category"],
+      ["team", "Team / Org"], ["phone", "Phone"], ["email", "Email"], ["notes", "Notes"]
+    ]);
+    this.renderTable("table-pledge", pledges, [
+      ["name", "Name"], ["email", "Email"], ["amount", "Amount (₦)"],
+      ["method", "Method"], ["message", "Message"]
+    ]);
   },
 
-  renderTable() {
-    const wrap = document.getElementById("table-central");
-    const rows = this.filtered();
+  renderTable(id, rows, cols) {
+    const wrap = document.getElementById(id);
     if (!rows.length) {
-      wrap.innerHTML = '<div class="empty-state">No records in this category yet. New submissions from the website appear here instantly.</div>';
+      wrap.innerHTML = '<div class="empty-state">No records yet. Every new submission on the website appears here automatically.</div>';
       return;
     }
-    const cols = [
-      ["name", "Name"], ["type", "Type"], ["email", "Email"], ["phone", "Phone"],
-      ["event", "Event"], ["interest", "Interest"], ["category", "Category"],
-      ["team", "Team / Org"], ["amount", "Amount (₦)"], ["method", "Method"],
-      ["notes", "Notes"], ["message", "Message"]
-    ];
     let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Date</th>';
     cols.forEach(c => (html += `<th>${c[1]}</th>`));
     html += "</tr></thead><tbody>";
     rows.forEach(r => {
       html += `<tr><td><code>${this.esc(r.id)}</code></td><td>${this.esc(new Date(r.date).toLocaleString())}</td>`;
-      cols.forEach(c => {
-        let v = r.data[c[0]] || "";
-        if (c[0] === "type") v = `<span class="badge ${this.esc(r.type)}">${this.esc(r.type)}</span>`;
-        else v = this.esc(v);
-        html += `<td>${v || "—"}</td>`;
-      });
+      cols.forEach(c => (html += `<td>${this.esc(r.data[c[0]] || "") || "—"}</td>`));
       html += "</tr>";
     });
     html += "</tbody></table>";
     wrap.innerHTML = html;
   },
 
-  setFilter(f, btn) {
-    this.filter = f;
-    document.querySelectorAll("[data-filter]").forEach(b => b.classList.remove("active"));
-    if (btn) btn.classList.add("active");
-    this.renderTable();
-  },
-
-  exportCSV() {
-    const rows = this.filtered();
+  exportCSV(type) {
+    const rows = type === "all" ? this.records : this.records.filter(r => r.type === type);
     if (!rows.length) { alert("No records to export."); return; }
     const keys = new Set(["id", "type", "date"]);
     rows.forEach(r => Object.keys(r.data).forEach(k => keys.add(k)));
@@ -125,7 +113,7 @@ const DOH_Admin = {
     const blob = new Blob([csv], { type: "text/csv" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `doh-central-${this.filter}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `doh-${type}-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(a.href);
   }
@@ -154,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  /* tabs: database / settings */
+  /* tabs */
   document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));

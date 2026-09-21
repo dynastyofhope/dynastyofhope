@@ -50,9 +50,9 @@
 </header>
 <section class="page-hero" style="padding:52px 0 40px">
   <div class="container">
-    <span class="eyebrow">Restricted Area — Authorised Admin Only</span>
+    <span class="eyebrow">Restricted Area</span>
     <h1>Admin Dashboard</h1>
-    <p>One central database for every volunteer application, event registration and donation pledge.</p>
+    <p>Your online tracker: everyone who registers on the website, collated in one place.</p>
   </div>
 </section>
 
@@ -63,7 +63,7 @@
     <div id="admin-login" class="admin-login">
       <div class="form-card">
         <h2 style="margin-bottom:6px">🔐 Administrator Login</h2>
-        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:20px">Enter the admin password to open the central database.</p>
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:20px">Enter the admin password to open the tracker.</p>
         <form id="login-form">
           <div class="form-group"><label>Password</label><input type="password" id="login-pass" required placeholder="••••••••" autocomplete="current-password"></div>
           <div style="margin-top:16px"><button type="submit" class="btn btn-navy" style="width:100%">Log In</button></div>
@@ -76,10 +76,10 @@
     <!-- ===== DASHBOARD ===== -->
     <div id="admin-dash" style="display:none">
       <div class="admin-bar">
-        <h1>Central Database</h1>
+        <h1>Tracker <span id="online-status" style="font-size:0.85rem;color:var(--muted);font-weight:400"></span></h1>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
           <button class="btn btn-outline btn-sm" onclick="DOH_Admin.load()">⟳ Refresh</button>
-          <button class="btn btn-outline btn-sm" onclick="DOH_Admin.exportCSV()">⬇ Export CSV</button>
+          <button class="btn btn-outline btn-sm" onclick="DOH_Admin.exportCSV('all')">⬇ Export All (CSV)</button>
           <button class="btn btn-navy btn-sm" onclick="DOH_Admin.logout()">Log Out</button>
         </div>
       </div>
@@ -93,21 +93,25 @@
 
       <div class="admin-panel">
         <div class="tabs">
-          <button class="tab-btn active" data-tab="db">Database</button>
+          <button class="tab-btn active" data-tab="volunteer">Volunteers</button>
+          <button class="tab-btn" data-tab="register">Registrations</button>
+          <button class="tab-btn" data-tab="pledge">Pledges</button>
           <button class="tab-btn" data-tab="settings">Settings</button>
         </div>
 
-        <div class="tab-panel" id="panel-db">
-          <div class="panel-head">
-            <h2>All Submissions <span id="online-status" style="font-size:0.8rem;color:var(--muted);font-weight:400"></span></h2>
-            <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <button class="btn btn-outline btn-sm active" data-filter="all" onclick="DOH_Admin.setFilter('all', this)" style="border-color:var(--navy);background:var(--navy);color:#fff">All</button>
-              <button class="btn btn-outline btn-sm" data-filter="volunteer" onclick="DOH_Admin.setFilter('volunteer', this)">Volunteers</button>
-              <button class="btn btn-outline btn-sm" data-filter="register" onclick="DOH_Admin.setFilter('register', this)">Registrations</button>
-              <button class="btn btn-outline btn-sm" data-filter="pledge" onclick="DOH_Admin.setFilter('pledge', this)">Pledges</button>
-            </div>
-          </div>
-          <div class="table-scroll" id="table-central"></div>
+        <div class="tab-panel" id="panel-volunteer">
+          <div class="panel-head"><h2>Volunteer Applications</h2><button class="btn btn-outline btn-sm" onclick="DOH_Admin.exportCSV('volunteer')">⬇ CSV</button></div>
+          <div class="table-scroll" id="table-volunteer"></div>
+        </div>
+
+        <div class="tab-panel" id="panel-register" style="display:none">
+          <div class="panel-head"><h2>Event Registrations</h2><button class="btn btn-outline btn-sm" onclick="DOH_Admin.exportCSV('register')">⬇ CSV</button></div>
+          <div class="table-scroll" id="table-register"></div>
+        </div>
+
+        <div class="tab-panel" id="panel-pledge" style="display:none">
+          <div class="panel-head"><h2>Donation Pledges</h2><button class="btn btn-outline btn-sm" onclick="DOH_Admin.exportCSV('pledge')">⬇ CSV</button></div>
+          <div class="table-scroll" id="table-pledge"></div>
         </div>
 
         <div class="tab-panel" id="panel-settings" style="display:none">
@@ -121,12 +125,12 @@
               <p id="pass-msg" style="margin-top:12px;font-size:0.88rem;color:var(--gold-dark)"></p>
             </form>
             <div class="form-card" style="box-shadow:none;padding:20px;border:1px solid #e6eaf2">
-              <h3 style="margin-bottom:14px">How Your Data Lives</h3>
+              <h3 style="margin-bottom:14px">How the Tracker Works</h3>
               <ul style="color:var(--muted);font-size:0.88rem;padding-left:18px;display:grid;gap:8px">
-                <li><strong>One central database:</strong> every submission is stored in the foundation's Google Sheet (Submissions tab) — never on visitors' devices.</li>
-                <li><strong>Admin-only access:</strong> this dashboard and the Sheet are protected by your admin password and your private Google account.</li>
-                <li><strong>Email receipts:</strong> a copy of every submission is also emailed to Dynastyofhope2023@gmail.com.</li>
-                <li><strong>Backup:</strong> use Export CSV any time for Excel records.</li>
+                <li>Everyone who submits a form on the website is collated online in one central Google Sheet (your tracker).</li>
+                <li>This dashboard reads that Sheet live — same numbers on your phone, laptop or any device.</li>
+                <li>A copy of every submission is also emailed to Dynastyofhope2023@gmail.com.</li>
+                <li>Use the CSV buttons for Excel backups any time.</li>
               </ul>
             </div>
           </div>
