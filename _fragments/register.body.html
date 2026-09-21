@@ -1,0 +1,82 @@
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">December 2026 Events</span>
+    <h1>Event Registration</h1>
+    <p>Register your football team, join as a match official, book carnival raffle tickets, volunteer or sponsor.</p>
+    <div class="breadcrumbs"><a href="index.html">Home</a> &rsaquo; Register</div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container grid grid-2" style="align-items:start;gap:40px">
+    <div class="form-card">
+      <h2 style="margin-bottom:6px">Registration Form</h2>
+      <p style="color:var(--muted);font-size:0.93rem;margin-bottom:24px">Submission is free — our events desk will confirm your slot by phone or WhatsApp within 48 hours.</p>
+      <form data-store="register">
+        <div class="form-grid">
+          <div class="form-group"><label>Event <span class="req">*</span></label>
+            <select id="event" name="event" required>
+              <option value="">— Select event —</option>
+              <option value="football">Football Championship (1–26 Dec 2026)</option>
+              <option value="carnival">Charity Carnival Blast &amp; Mega Raffle Draw (27 Dec 2026)</option>
+            </select>
+          </div>
+          <div class="form-group"><label>I am registering as <span class="req">*</span></label>
+            <select name="category" required>
+              <option value="">— Choose —</option>
+              <option>Football Team</option>
+              <option>Match Official (Referee / Linesman)</option>
+              <option>Event Volunteer</option>
+              <option>Raffle Ticket Buyer</option>
+              <option>Stall / Vendor</option>
+              <option>Sponsor</option>
+              <option>Guest / Attendee</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Full Name <span class="req">*</span></label><input type="text" name="fullname" required placeholder="Contact person's name"></div>
+          <div class="form-group"><label>Team / Organisation</label><input type="text" name="team" placeholder="e.g. Ungwa Bijeh United FC"></div>
+          <div class="form-group"><label>Phone / WhatsApp <span class="req">*</span></label><input type="tel" name="phone" required placeholder="0803 000 0000"></div>
+          <div class="form-group"><label>Email Address</label><input type="email" name="email" placeholder="you@example.com"></div>
+          <div class="form-group full"><label>Notes (team size, ticket quantity, sponsorship tier...)</label><textarea name="notes" rows="4" placeholder="e.g. Team of 18 players; or 10 raffle tickets; or Silver sponsorship"></textarea></div>
+        </div>
+        <div style="margin-top:20px"><button type="submit" class="btn btn-gold">Submit Registration</button></div>
+        <div class="form-success">✅ Registration <strong>{{ID}}</strong> received! Our events desk will confirm your slot shortly. Keep your reference ID for follow-up.</div>
+        <p class="form-note">Every submission is also emailed to the foundation office automatically. Need instant help?  <a data-wa="Hello! I need help with event registration." href="#">WhatsApp the events desk</a> · 0903 698 9696</p>
+      </form>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:26px"><div class="card-body">
+        <h3>⚽ Football Championship — Quick Facts</h3>
+        <ul class="event-meta">
+          <li><svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/></svg>1st – 26th December 2026</li>
+          <li><svg viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 11.5 7.3 11.8a1 1 0 0 0 1.4 0C13 21.5 20 15.4 20 10a8 8 0 0 0-8-8zm0 11a3 3 0 1 1 3-3 3 3 0 0 1-3 3z"/></svg>Gonigora Govt. Primary School, Ungwa Bijeh, Kaduna</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6a1 1 0 0 1-1-1v-1h14v1z"/></svg>1st: ₦100,000 · 2nd: ₦50,000 + award categories</li>
+        </ul>
+        <a href="events.html" class="btn btn-outline btn-sm">Full Event Details</a>
+      </div></div>
+      <div class="card" style="margin-bottom:26px"><div class="card-body">
+        <h3>🎉 Charity Carnival — Quick Facts</h3>
+        <ul class="event-meta">
+          <li><svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/></svg>Sunday, 27th December 2026</li>
+          <li><svg viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 11.5 7.3 11.8a1 1 0 0 0 1.4 0C13 21.5 20 15.4 20 10a8 8 0 0 0-8-8zm0 11a3 3 0 1 1 3-3 3 3 0 0 1-3 3z"/></svg>Goni Gora Govt. Primary School, U/Bijeh, Kaduna</li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6h-2.2A3.9 3.9 0 0 0 14 3.2V3a1 1 0 0 0-2 0v.2A3.9 3.9 0 0 0 8.2 6H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zM12 5a2 2 0 0 1 2 2h-4a2 2 0 0 1 2-2zm-2 9H7v-2h3v2zm8 0h-6v-2h6v2zm0-4H7V8h11v2z"/></svg>Games, music, food &amp; Mega Raffle Draw</li>
+        </ul>
+        <a href="events.html" class="btn btn-outline btn-sm">Full Event Details</a>
+      </div></div>
+      <div class="card" style="margin-bottom:26px"><div class="card-body">
+        <h3>🔗 Direct Registration Link</h3>
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:10px">Share this link with teams and match officials for the Football Championship:</p>
+        <p style="font-family:var(--font-head);font-size:0.88rem;word-break:break-all"><a href="https://dynastyofhope.github.io/dynastyofhope/register.html?event=football">dynastyofhope.github.io/dynastyofhope/register.html</a></p>
+        <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" data-copy="https://dynastyofhope.github.io/dynastyofhope/register.html?event=football">Copy Link</button>
+          <a data-wa="Hello! Register your team or join as a match official for the Gonigora Community Development Football Championship Tournament, Kaduna (1-26 Dec 2026): https://dynastyofhope.github.io/dynastyofhope/register.html" href="#" class="btn btn-green btn-sm">Share on WhatsApp</a>
+        </div>
+      </div></div>
+      <div class="bank-card">
+        <h3>Sponsorship &amp; Payments</h3>
+        <p style="color:#dbe4f5;margin-bottom:14px">Sponsorship and team commitment fees: UBA <strong>1027342537</strong> — Dynasty of Hope Foundation. Tiers from ₦50,000 to ₦1,000,000.</p>
+        <a href="proposal.html" class="btn btn-gold btn-sm">View Sponsorship Proposal</a>
+      </div>
+    </div>
+  </div>
+</section>

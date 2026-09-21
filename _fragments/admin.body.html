@@ -1,0 +1,88 @@
+<section class="page-hero" style="padding:52px 0 40px">
+  <div class="container">
+    <span class="eyebrow">Restricted Area</span>
+    <h1>Admin Dashboard</h1>
+    <p>Manage volunteer applications, event registrations and donation pledges.</p>
+  </div>
+</section>
+
+<section class="admin-wrap">
+  <div class="container">
+
+    <!-- ===== LOGIN ===== -->
+    <div id="admin-login" class="admin-login">
+      <div class="form-card">
+        <h2 style="margin-bottom:6px">🔐 Administrator Login</h2>
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:20px">Enter the admin password to open the dashboard.</p>
+        <form id="login-form">
+          <div class="form-group"><label>Password</label><input type="password" id="login-pass" required placeholder="••••••••" autocomplete="current-password"></div>
+          <div style="margin-top:16px"><button type="submit" class="btn btn-navy" style="width:100%">Log In</button></div>
+          <p id="login-error" style="color:#c0392b;font-size:0.88rem;margin-top:12px"></p>
+          <p class="form-note">First time? Default password is <code>hope2023</code> — please change it under Settings after logging in.</p>
+        </form>
+      </div>
+    </div>
+
+    <!-- ===== DASHBOARD ===== -->
+    <div id="admin-dash" style="display:none">
+      <div class="admin-bar">
+        <h1>Dashboard</h1>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="DOH_Admin.exportCSV('all')">⬇ Export All (CSV)</button>
+          <button class="btn btn-navy btn-sm" onclick="DOH_Admin.logout()">Log Out</button>
+        </div>
+      </div>
+
+      <div class="stat-cards">
+        <div class="stat-card"><div class="n" id="stat-vol">0</div><div class="l">Volunteer Applications</div></div>
+        <div class="stat-card"><div class="n" id="stat-reg">0</div><div class="l">Event Registrations</div></div>
+        <div class="stat-card"><div class="n" id="stat-pledge">0</div><div class="l">Donation Pledges</div></div>
+        <div class="stat-card"><div class="n" id="stat-total">₦0</div><div class="l">Total Pledged</div></div>
+      </div>
+
+      <div class="admin-panel">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="volunteer">Volunteers</button>
+          <button class="tab-btn" data-tab="register">Registrations</button>
+          <button class="tab-btn" data-tab="pledge">Pledges</button>
+          <button class="tab-btn" data-tab="settings">Settings</button>
+        </div>
+
+        <div class="tab-panel" id="panel-volunteer">
+          <div class="panel-head"><h2>Volunteer Applications</h2><button class="btn btn-outline btn-sm" onclick="DOH_Admin.exportCSV('volunteer')"> CSV</button></div>
+          <div class="table-scroll" id="table-volunteer"></div>
+        </div>
+
+        <div class="tab-panel" id="panel-register" style="display:none">
+          <div class="panel-head"><h2>Event Registrations</h2><button class="btn btn-outline btn-sm" onclick="DOH_Admin.exportCSV('register')">⬇ CSV</button></div>
+          <div class="table-scroll" id="table-register"></div>
+        </div>
+
+        <div class="tab-panel" id="panel-pledge" style="display:none">
+          <div class="panel-head"><h2>Donation Pledges</h2><button class="btn btn-outline btn-sm" onclick="DOH_Admin.exportCSV('pledge')">⬇ CSV</button></div>
+          <div class="table-scroll" id="table-pledge"></div>
+        </div>
+
+        <div class="tab-panel" id="panel-settings" style="display:none">
+          <div class="panel-head"><h2>Settings</h2></div>
+          <div style="padding:26px;display:grid;gap:26px;grid-template-columns:1fr 1fr" class="form-grid">
+            <form id="pass-form" class="form-card" style="box-shadow:none;padding:20px;border:1px solid #e6eaf2">
+              <h3 style="margin-bottom:14px">Change Admin Password</h3>
+              <div class="form-group" style="margin-bottom:12px"><label>Current Password</label><input type="password" id="pass-old" required></div>
+              <div class="form-group" style="margin-bottom:16px"><label>New Password (min 6 chars)</label><input type="password" id="pass-new" required></div>
+              <button type="submit" class="btn btn-navy btn-sm">Update Password</button>
+              <p id="pass-msg" style="margin-top:12px;font-size:0.88rem;color:var(--gold-dark)"></p>
+            </form>
+            <div class="form-card" style="box-shadow:none;padding:20px;border:1px solid #e6eaf2">
+              <h3 style="margin-bottom:14px">Data Management</h3>
+              <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px">Every submission is <strong>emailed to Dynastyofhope2023@gmail.com</strong> (FormSubmit delivery — activate once by clicking the link in the first activation email). The tables below are this device's local copy: export to CSV regularly for backup, and use "Export All" before clearing.</p>
+              <button class="btn btn-outline btn-sm" style="border-color:#c0392b;color:#c0392b" onclick="DOH_Admin.clearAll()">🗑 Clear All Records</button>
+              <p class="form-note">Note: records are per-browser. For a central inbox, connect a form service later (see README).</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
