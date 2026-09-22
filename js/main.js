@@ -19,8 +19,7 @@ const DOH_CONFIG = {
     tiktok: "https://tiktok.com/@dynastyofhopefoundation"
   },
   bank: { name: "United Bank for Africa (UBA)", account: "1027342537", acctName: "Dynasty of Hope Foundation" },
-  storageKey: "doh_submissions",
-  dbUrl: "",          // paste Google Apps Script web-app URL here (or set via Admin > Settings)
+  dbUrl: "https://script.google.com/macros/s/AKfycbwkA_qfEseKTUeZug2vSf9XjTwZmUlUce7hXYapVM9Uqzchd_DxPRB-8drV7UMzzjqqSA/exec", // Google Sheet bridge (live)
   dbKey: "DOHF-2026", // must match KEY in google-apps-script/Code.gs
   adminPassKey: "doh_admin_pass",
   defaultAdminPass: "hope2023" // CHANGE after first login (Admin > Settings)
@@ -70,30 +69,6 @@ function DOH_SendEmail(type, data, recId) {
     body: JSON.stringify(payload)
   }).then(r => r.ok).catch(() => false);
 }
-
-/* ---- Submission store (localStorage) ---- */
-const DOH_Store = {
-  all() {
-    try { return JSON.parse(localStorage.getItem(DOH_CONFIG.storageKey)) || []; }
-    catch (e) { return []; }
-  },
-  add(type, data) {
-    const list = this.all();
-    const rec = {
-      id: "DOH-" + Date.now().toString(36).toUpperCase(),
-      type, data,
-      date: new Date().toISOString()
-    };
-    list.unshift(rec);
-    localStorage.setItem(DOH_CONFIG.storageKey, JSON.stringify(list));
-    return rec;
-  },
-  remove(id) {
-    localStorage.setItem(DOH_CONFIG.storageKey, JSON.stringify(this.all().filter(r => r.id !== id)));
-  },
-  clear() { localStorage.removeItem(DOH_CONFIG.storageKey); },
-  byType(t) { return this.all().filter(r => r.type === t); }
-};
 
 /* ---- Helpers ---- */
 function dohWhatsAppLink(message) {
@@ -147,14 +122,13 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       const data = {};
       new FormData(form).forEach((v, k) => (data[k] = String(v).trim()));
-      let rec;
-      try { rec = DOH_Store.add(form.getAttribute("data-store"), data); }
-      catch (e) { rec = { id: "DOH-" + Date.now().toString(36).toUpperCase() }; }
-      DOH_SendEmail(form.getAttribute("data-store"), data, rec.id);
-      DOH_SendOnline(form.getAttribute("data-store"), data, rec.id);
+      const type = form.getAttribute("data-store");
+      const recId = "DOH-" + Date.now().toString(36).toUpperCase();
+      DOH_SendOnline(type, data, recId);   // central Google Sheet database
+      DOH_SendEmail(type, data, recId);    // email receipt to the foundation inbox
       const ok = form.querySelector(".form-success");
       if (ok) {
-        ok.innerHTML = ok.innerHTML.replace("{{ID}}", rec.id);
+        ok.innerHTML = ok.innerHTML.replace("{{ID}}", recId);
         ok.classList.add("show");
       }
       form.reset();

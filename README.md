@@ -62,21 +62,14 @@ That's it — hosting is free forever on GitHub Pages.
 
 ---
 
-## 📥 How Submissions Reach You (volunteers, registrations, pledges)
+## 🗄 Central Database Model (how submissions flow)
 
-1. Every form submission is **emailed to Dynastyofhope2023@gmail.com** via FormSubmit.co (free, no account).
-2. **One-time activation:** after the site is live, submit any form once yourself, then open the email from FormSubmit and click **Activate** (check Spam if needed).
-3. From then on, every volunteer application / registration / pledge arrives in the Gmail inbox as a neat table email, with a reference ID.
-4. The **Admin page** additionally keeps a local copy on the device used to submit/view, with CSV export for Excel.
+ONE central database — the foundation's **Google Sheet** (`DOHF Submissions DB` → Submissions tab), written via the Google Apps Script bridge in `google-apps-script/Code.gs`.
 
-## 🔐 Admin Dashboard
-
-- Open `…/admin.html` → default password: **`hope2023`**
-- **Change it immediately** under *Settings → Change Admin Password*.
-- The dashboard lists every volunteer application, event registration and donation pledge submitted through the site, with **CSV export** for Excel.
-- ⚠️ Because GitHub Pages is static (no server), submissions are stored in the **visitor's browser** (localStorage) as a lightweight record — the admin panel shows records captured on the device used. For a central inbox, connect a free form service later (Formspree/Google Forms); the forms are already grouped with `data-store` attributes so wiring is a one-line change in `js/main.js`.
-
----
+- **Volunteers / teams / donors** submit forms → the record is appended to the central Sheet **and** emailed to Dynastyofhope2023@gmail.com (FormSubmit receipt).
+- **Nothing is stored on visitors' devices** — no per-browser databases anywhere.
+- **Admin only + approval:** the password-protected Admin page shows every submission as **Pending** with one-click **✓ Approve / Reject** buttons; decisions sync back to the Sheet and appear in CSV exports. The Sheet itself is private to the foundation's Google account.
+- Setup guide: `GOOGLE-SHEETS-SETUP.md`. The web-app URL is pre-wired in `js/main.js` (`DOH_CONFIG.dbUrl`).
 
 ## ✏️ Editing Contact / Social / Bank Details
 

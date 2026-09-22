@@ -2,7 +2,7 @@
   <div class="container">
     <span class="eyebrow">Restricted Area</span>
     <h1>Admin Dashboard</h1>
-    <p>Manage volunteer applications, event registrations and donation pledges.</p>
+    <p>Your online tracker: everyone who registers on the website, collated in one place.</p>
   </div>
 </section>
 
@@ -13,12 +13,12 @@
     <div id="admin-login" class="admin-login">
       <div class="form-card">
         <h2 style="margin-bottom:6px">🔐 Administrator Login</h2>
-        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:20px">Enter the admin password to open the dashboard.</p>
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:20px">Enter the admin password to open the tracker.</p>
         <form id="login-form">
           <div class="form-group"><label>Password</label><input type="password" id="login-pass" required placeholder="••••••••" autocomplete="current-password"></div>
           <div style="margin-top:16px"><button type="submit" class="btn btn-navy" style="width:100%">Log In</button></div>
           <p id="login-error" style="color:#c0392b;font-size:0.88rem;margin-top:12px"></p>
-          <p class="form-note">First time? Default password is <code>hope2023</code> — please change it under Settings after logging in.</p>
+          <p class="form-note">First time? Default password is <code>hope2023</code> — change it under Settings after logging in.</p>
         </form>
       </div>
     </div>
@@ -26,8 +26,9 @@
     <!-- ===== DASHBOARD ===== -->
     <div id="admin-dash" style="display:none">
       <div class="admin-bar">
-        <h1>Dashboard</h1>
+        <h1>Tracker <span id="online-status" style="font-size:0.85rem;color:var(--muted);font-weight:400"></span></h1>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="DOH_Admin.load()">⟳ Refresh</button>
           <button class="btn btn-outline btn-sm" onclick="DOH_Admin.exportCSV('all')">⬇ Export All (CSV)</button>
           <button class="btn btn-navy btn-sm" onclick="DOH_Admin.logout()">Log Out</button>
         </div>
@@ -45,12 +46,11 @@
           <button class="tab-btn active" data-tab="volunteer">Volunteers</button>
           <button class="tab-btn" data-tab="register">Registrations</button>
           <button class="tab-btn" data-tab="pledge">Pledges</button>
-          <button class="tab-btn" data-tab="online">Online Database</button>
           <button class="tab-btn" data-tab="settings">Settings</button>
         </div>
 
         <div class="tab-panel" id="panel-volunteer">
-          <div class="panel-head"><h2>Volunteer Applications</h2><button class="btn btn-outline btn-sm" onclick="DOH_Admin.exportCSV('volunteer')"> CSV</button></div>
+          <div class="panel-head"><h2>Volunteer Applications</h2><button class="btn btn-outline btn-sm" onclick="DOH_Admin.exportCSV('volunteer')">⬇ CSV</button></div>
           <div class="table-scroll" id="table-volunteer"></div>
         </div>
 
@@ -64,15 +64,9 @@
           <div class="table-scroll" id="table-pledge"></div>
         </div>
 
-        <div class="tab-panel" id="panel-online" style="display:none">
-          <div class="panel-head"><h2>All-Device Submissions (Google Sheet) <span id="online-status" style="font-size:0.8rem;color:var(--muted);font-weight:400"></span></h2>
-            <button class="btn btn-outline btn-sm" onclick="DOH_Admin.loadOnline()">⟳ Refresh</button></div>
-          <div class="table-scroll" id="table-online"></div>
-        </div>
-
         <div class="tab-panel" id="panel-settings" style="display:none">
           <div class="panel-head"><h2>Settings</h2></div>
-          <div style="padding:26px;display:grid;gap:26px;grid-template-columns:1fr 1fr" class="form-grid">
+          <div style="padding:26px" class="form-grid">
             <form id="pass-form" class="form-card" style="box-shadow:none;padding:20px;border:1px solid #e6eaf2">
               <h3 style="margin-bottom:14px">Change Admin Password</h3>
               <div class="form-group" style="margin-bottom:12px"><label>Current Password</label><input type="password" id="pass-old" required></div>
@@ -81,18 +75,14 @@
               <p id="pass-msg" style="margin-top:12px;font-size:0.88rem;color:var(--gold-dark)"></p>
             </form>
             <div class="form-card" style="box-shadow:none;padding:20px;border:1px solid #e6eaf2">
-              <h3 style="margin-bottom:14px">Connect Online Database</h3>
-              <p style="color:var(--muted);font-size:0.86rem;margin-bottom:12px">One-time setup: create the Google Sheet bridge (see GOOGLE-SHEETS-SETUP.md), then paste the web-app URL here. Every submission — from every device — will appear in your Sheet and in the Online Database tab.</p>
-              <div class="form-group" style="margin-bottom:12px"><label>Apps Script Web-app URL</label><input type="url" id="db-url" placeholder="https://script.google.com/macros/s/…/exec"></div>
-              <div class="form-group" style="margin-bottom:16px"><label>Access Key</label><input type="text" id="db-key" value="DOHF-2026"></div>
-              <button class="btn btn-navy btn-sm" onclick="DOH_Admin.saveConnection()">Save Connection</button>
-              <p id="db-msg" style="margin-top:12px;font-size:0.88rem;color:var(--gold-dark)"></p>
-            </div>
-            <div class="form-card" style="box-shadow:none;padding:20px;border:1px solid #e6eaf2">
-              <h3 style="margin-bottom:14px">Data Management</h3>
-              <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px">Every submission is <strong>emailed to Dynastyofhope2023@gmail.com</strong> (FormSubmit delivery — activate once by clicking the link in the first activation email). The tables below are this device's local copy: export to CSV regularly for backup, and use "Export All" before clearing.</p>
-              <button class="btn btn-outline btn-sm" style="border-color:#c0392b;color:#c0392b" onclick="DOH_Admin.clearAll()">🗑 Clear All Records</button>
-              <p class="form-note">Note: records are per-browser. For a central inbox, connect a form service later (see README).</p>
+              <h3 style="margin-bottom:14px">How the Tracker Works</h3>
+              <ul style="color:var(--muted);font-size:0.88rem;padding-left:18px;display:grid;gap:8px">
+                <li>Everyone who submits a form on the website is collated online in one central Google Sheet (your tracker) with status <strong>Pending</strong>.</li>
+                <li><strong>You alone approve:</strong> click ✓ Approve or Reject on any record — the decision is saved to the Sheet and included in CSV exports.</li>
+                <li>This dashboard reads that Sheet live — same numbers on your phone, laptop or any device.</li>
+                <li>A copy of every submission is also emailed to Dynastyofhope2023@gmail.com.</li>
+                <li>Use the CSV buttons for Excel backups any time.</li>
+              </ul>
             </div>
           </div>
         </div>
