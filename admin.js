@@ -44,6 +44,7 @@ const DOH_Admin = {
         if (!res.ok) throw new Error(res.error || "bad response");
         this.records = (res.records || []).map(r => {
           if (r.data && !r.data.name) r.data.name = r.data.fullname;
+          r.status = r.status || "Pending";
           return r;
         });
         const pending = this.records.filter(r => r.status === "Pending").length;
