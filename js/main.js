@@ -19,7 +19,7 @@ const DOH_CONFIG = {
     tiktok: "https://tiktok.com/@dynastyofhopefoundation"
   },
   bank: { name: "United Bank for Africa (UBA)", account: "1027342537", acctName: "Dynasty of Hope Foundation" },
-  dbUrl: "https://script.google.com/macros/s/AKfycbykgz1nxmsVZ-WvKpzlbhWha9Fz21FFofYJVEAHp7J7y4HnzUvs3CMjbYhEmPK3rcIKTQ/exec", // Google Sheet bridge (live)
+  dbUrl: "https://script.google.com/macros/s/AKfycbxOdA-vpXhDnEfWbiX2b1uWgcnaiaYbHM41Cr8JNjEfDDpMsgTpbPktx_IQ6KdkijBbqg/exec", // Google Sheet bridge (live)
   dbKey: "DOHF-2026", // must match KEY in google-apps-script/Code.gs
   adminPassKey: "doh_admin_pass",
   defaultAdminPass: "hope2023" // CHANGE after first login (Admin > Settings)
