@@ -75,6 +75,14 @@
               <p id="pass-msg" style="margin-top:12px;font-size:0.88rem;color:var(--gold-dark)"></p>
             </form>
             <div class="form-card" style="box-shadow:none;padding:20px;border:1px solid #e6eaf2">
+              <h3 style="margin-bottom:14px">Tracker Connection</h3>
+              <p style="color:var(--muted);font-size:0.86rem;margin-bottom:12px">If you ever create a new Apps Script deployment, paste its /exec URL here (this device). For all-device coverage, send the URL to be baked into the site code.</p>
+              <div class="form-group" style="margin-bottom:12px"><label>Apps Script Web-app URL</label><input type="url" id="db-url" placeholder="https://script.google.com/macros/s/…/exec"></div>
+              <div class="form-group" style="margin-bottom:16px"><label>Access Key</label><input type="text" id="db-key" value="DOHF-2026"></div>
+              <button class="btn btn-navy btn-sm" onclick="DOH_Admin.saveConnection()">Save Connection</button>
+              <p id="db-msg" style="margin-top:12px;font-size:0.88rem;color:var(--gold-dark)"></p>
+            </div>
+            <div class="form-card" style="box-shadow:none;padding:20px;border:1px solid #e6eaf2">
               <h3 style="margin-bottom:14px">How the Tracker Works</h3>
               <ul style="color:var(--muted);font-size:0.88rem;padding-left:18px;display:grid;gap:8px">
                 <li>Everyone who submits a form on the website is collated online in one central Google Sheet (your tracker) with status <strong>Pending</strong>.</li>

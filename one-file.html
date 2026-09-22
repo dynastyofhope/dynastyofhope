@@ -1333,6 +1333,14 @@ table.admin-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; 
               <p id="pass-msg" style="margin-top:12px;font-size:0.88rem;color:var(--gold-dark)"></p>
             </form>
             <div class="form-card" style="box-shadow:none;padding:20px;border:1px solid #e6eaf2">
+              <h3 style="margin-bottom:14px">Tracker Connection</h3>
+              <p style="color:var(--muted);font-size:0.86rem;margin-bottom:12px">If you ever create a new Apps Script deployment, paste its /exec URL here (this device). For all-device coverage, send the URL to be baked into the site code.</p>
+              <div class="form-group" style="margin-bottom:12px"><label>Apps Script Web-app URL</label><input type="url" id="db-url" placeholder="https://script.google.com/macros/s/…/exec"></div>
+              <div class="form-group" style="margin-bottom:16px"><label>Access Key</label><input type="text" id="db-key" value="DOHF-2026"></div>
+              <button class="btn btn-navy btn-sm" onclick="DOH_Admin.saveConnection()">Save Connection</button>
+              <p id="db-msg" style="margin-top:12px;font-size:0.88rem;color:var(--gold-dark)"></p>
+            </div>
+            <div class="form-card" style="box-shadow:none;padding:20px;border:1px solid #e6eaf2">
               <h3 style="margin-bottom:14px">How the Tracker Works</h3>
               <ul style="color:var(--muted);font-size:0.88rem;padding-left:18px;display:grid;gap:8px">
                 <li>Everyone who submits a form on the website is collated online in one central Google Sheet (your tracker) with status <strong>Pending</strong>.</li>
@@ -1440,7 +1448,7 @@ const DOH_CONFIG = {
     tiktok: "https://tiktok.com/@dynastyofhopefoundation"
   },
   bank: { name: "United Bank for Africa (UBA)", account: "1027342537", acctName: "Dynasty of Hope Foundation" },
-  dbUrl: "https://script.google.com/macros/s/AKfycbwkA_qfEseKTUeZug2vSf9XjTwZmUlUce7hXYapVM9Uqzchd_DxPRB-8drV7UMzzjqqSA/exec", // Google Sheet bridge (live)
+  dbUrl: "https://script.google.com/macros/s/AKfycbxHQsAv5dZj8ZiPwPJqEjTP6ePvi_Tj9yFuF4NlMLeU5oxLoosPNgnH_H843U7iZmeuYw/exec", // Google Sheet bridge (live)
   dbKey: "DOHF-2026", // must match KEY in google-apps-script/Code.gs
   adminPassKey: "doh_admin_pass",
   defaultAdminPass: "hope2023" // CHANGE after first login (Admin > Settings)
@@ -1634,6 +1642,7 @@ const DOH_Admin = {
         if (!res.ok) throw new Error(res.error || "bad response");
         this.records = (res.records || []).map(r => {
           if (r.data && !r.data.name) r.data.name = r.data.fullname;
+          r.status = r.status || "Pending";
           return r;
         });
         const pending = this.records.filter(r => r.status === "Pending").length;
@@ -1662,6 +1671,33 @@ const DOH_Admin = {
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ key: db.key, action: "setStatus", id: id, status: status })
     }).catch(() => {});
+  },
+
+  /* ---- delete a record permanently ---- */
+  deleteRecord(id) {
+    if (!confirm("Permanently delete record " + id + " from the tracker?")) return;
+    const db = DOH_GetDb();
+    this.records = this.records.filter(r => r.id !== id);
+    this.render();
+    fetch(db.url, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ key: db.key, action: "deleteRecord", id: id })
+    }).catch(() => {});
+  },
+
+  /* ---- connect a (new) tracker URL from Settings ---- */
+  saveConnection() {
+    const url = document.getElementById("db-url").value.trim();
+    const key = document.getElementById("db-key").value.trim() || "DOHF-2026";
+    try {
+      localStorage.setItem("doh_db_url", url);
+      localStorage.setItem("doh_db_key", key);
+    } catch (e) {}
+    const msg = document.getElementById("db-msg");
+    if (msg) msg.textContent = url ? "Connection saved on this device ✓" : "Connection cleared.";
+    this.load();
   },
 
   render() {
@@ -1703,7 +1739,7 @@ const DOH_Admin = {
     }
     let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Date</th>';
     cols.forEach(c => (html += `<th>${c[1]}</th>`));
-    html += "<th>Status</th><th>Your Decision</th></tr></thead><tbody>";
+    html += "<th>Status</th><th>Actions (Approve / Reject / Delete)</th></tr></thead><tbody>";
     rows.forEach(r => {
       html += `<tr><td><code>${this.esc(r.id)}</code></td><td>${this.esc(new Date(r.date).toLocaleString())}</td>`;
       cols.forEach(c => (html += `<td>${this.esc(r.data[c[0]] || "") || "—"}</td>`));
@@ -1713,6 +1749,7 @@ const DOH_Admin = {
           ? `<button class="btn btn-outline btn-sm" onclick="DOH_Admin.setStatus('${r.id}','Pending')">Undo</button>`
           : `<button class="btn btn-gold btn-sm" onclick="DOH_Admin.setStatus('${r.id}','Approved')">✓ Approve</button>
              <button class="btn btn-outline btn-sm" style="border-color:#c0392b;color:#c0392b" onclick="DOH_Admin.setStatus('${r.id}','Rejected')">Reject</button>`) +
+        ` <button class="btn btn-outline btn-sm" style="border-color:#c0392b;color:#c0392b" title="Delete permanently" onclick="DOH_Admin.deleteRecord('${r.id}')">🗑 Delete</button>` +
         `</td></tr>`;
     });
     html += "</tbody></table>";

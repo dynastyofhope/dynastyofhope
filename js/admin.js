@@ -44,6 +44,7 @@ const DOH_Admin = {
         if (!res.ok) throw new Error(res.error || "bad response");
         this.records = (res.records || []).map(r => {
           if (r.data && !r.data.name) r.data.name = r.data.fullname;
+          r.status = r.status || "Pending";
           return r;
         });
         const pending = this.records.filter(r => r.status === "Pending").length;
@@ -72,6 +73,33 @@ const DOH_Admin = {
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ key: db.key, action: "setStatus", id: id, status: status })
     }).catch(() => {});
+  },
+
+  /* ---- delete a record permanently ---- */
+  deleteRecord(id) {
+    if (!confirm("Permanently delete record " + id + " from the tracker?")) return;
+    const db = DOH_GetDb();
+    this.records = this.records.filter(r => r.id !== id);
+    this.render();
+    fetch(db.url, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ key: db.key, action: "deleteRecord", id: id })
+    }).catch(() => {});
+  },
+
+  /* ---- connect a (new) tracker URL from Settings ---- */
+  saveConnection() {
+    const url = document.getElementById("db-url").value.trim();
+    const key = document.getElementById("db-key").value.trim() || "DOHF-2026";
+    try {
+      localStorage.setItem("doh_db_url", url);
+      localStorage.setItem("doh_db_key", key);
+    } catch (e) {}
+    const msg = document.getElementById("db-msg");
+    if (msg) msg.textContent = url ? "Connection saved on this device ✓" : "Connection cleared.";
+    this.load();
   },
 
   render() {
@@ -113,7 +141,7 @@ const DOH_Admin = {
     }
     let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Date</th>';
     cols.forEach(c => (html += `<th>${c[1]}</th>`));
-    html += "<th>Status</th><th>Your Decision</th></tr></thead><tbody>";
+    html += "<th>Status</th><th>Actions (Approve / Reject / Delete)</th></tr></thead><tbody>";
     rows.forEach(r => {
       html += `<tr><td><code>${this.esc(r.id)}</code></td><td>${this.esc(new Date(r.date).toLocaleString())}</td>`;
       cols.forEach(c => (html += `<td>${this.esc(r.data[c[0]] || "") || "—"}</td>`));
@@ -123,6 +151,7 @@ const DOH_Admin = {
           ? `<button class="btn btn-outline btn-sm" onclick="DOH_Admin.setStatus('${r.id}','Pending')">Undo</button>`
           : `<button class="btn btn-gold btn-sm" onclick="DOH_Admin.setStatus('${r.id}','Approved')">✓ Approve</button>
              <button class="btn btn-outline btn-sm" style="border-color:#c0392b;color:#c0392b" onclick="DOH_Admin.setStatus('${r.id}','Rejected')">Reject</button>`) +
+        ` <button class="btn btn-outline btn-sm" style="border-color:#c0392b;color:#c0392b" title="Delete permanently" onclick="DOH_Admin.deleteRecord('${r.id}')">🗑 Delete</button>` +
         `</td></tr>`;
     });
     html += "</tbody></table>";

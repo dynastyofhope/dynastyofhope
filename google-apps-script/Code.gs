@@ -41,6 +41,18 @@ function doPost(e) {
     if (body.key !== KEY) return out_({ ok: false, error: "invalid key" });
     var sh = getSheet_();
 
+    /* Admin delete */
+    if (body.action === "deleteRecord") {
+      var vals = sh.getDataRange().getValues();
+      for (var k = 1; k < vals.length; k++) {
+        if (String(vals[k][1]) === String(body.id)) {
+          sh.deleteRow(k + 1);
+          return out_({ ok: true, id: body.id, deleted: true });
+        }
+      }
+      return out_({ ok: false, error: "record not found" });
+    }
+
     /* Admin approval / rejection */
     if (body.action === "setStatus") {
       var values = sh.getDataRange().getValues();
