@@ -37,12 +37,17 @@ const DOH_TYPE_LABEL = {
 };
 /* ---- Online database (Google Sheet via Apps Script) ---- */
 function DOH_GetDb() {
-  let url = DOH_CONFIG.dbUrl || "", key = DOH_CONFIG.dbKey || "";
-  try {
-    url = localStorage.getItem("doh_db_url") || url;
-    key = localStorage.getItem("doh_db_key") || key;
-  } catch (e) {}
-  return { url: url.trim(), key: key };
+  /* The URL baked into DOH_CONFIG ALWAYS wins (central, admin-controlled).
+     A saved override is only used when no URL is baked in. */
+  let url = (DOH_CONFIG.dbUrl || "").trim();
+  let key = (DOH_CONFIG.dbKey || "").trim();
+  if (!url || !key) {
+    try {
+      url = url || (localStorage.getItem("doh_db_url") || "").trim();
+      key = key || (localStorage.getItem("doh_db_key") || "").trim();
+    } catch (e) {}
+  }
+  return { url: url, key: key };
 }
 function DOH_SendOnline(type, data, recId) {
   const db = DOH_GetDb();
