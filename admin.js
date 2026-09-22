@@ -1,8 +1,10 @@
 /* ============================================================
    Dynasty of Hope Foundation — Admin dashboard
-   Simple online tracker: volunteer applications, event
-   registrations and donation pledges submitted on the website,
-   collated in ONE central Google Sheet and displayed here.
+   Online volunteer tracker WITH APPROVAL:
+   - registrations arrive as "Pending"
+   - only the logged-in admin sees them
+   - admin approves or rejects each record; status syncs to the
+     central Google Sheet
    ============================================================ */
 
 const DOH_Admin = {
@@ -25,7 +27,7 @@ const DOH_Admin = {
 
   esc(s) { const d = document.createElement("div"); d.textContent = String(s); return d.innerHTML; },
 
-  /* ---- load the online tracker (central Google Sheet) ---- */
+  /* ---- load tracker ---- */
   load() {
     const db = DOH_GetDb();
     const status = document.getElementById("online-status");
@@ -44,7 +46,9 @@ const DOH_Admin = {
           if (r.data && !r.data.name) r.data.name = r.data.fullname;
           return r;
         });
-        if (status) status.textContent = this.records.length + " record(s) · synced " + new Date().toLocaleTimeString();
+        const pending = this.records.filter(r => r.status === "Pending").length;
+        if (status) status.textContent =
+          this.records.length + " record(s) · " + pending + " awaiting approval · synced " + new Date().toLocaleTimeString();
         this.render();
       })
       .catch(err => {
@@ -53,6 +57,21 @@ const DOH_Admin = {
           document.getElementById(id).innerHTML = '<div class="empty-state">Could not reach the online tracker. Check your connection and press Refresh.</div>';
         });
       });
+  },
+
+  /* ---- approve / reject ---- */
+  setStatus(id, status) {
+    const db = DOH_GetDb();
+    const rec = this.records.find(r => r.id === id);
+    if (!rec) return;
+    rec.status = status;               // optimistic update
+    this.render();
+    fetch(db.url, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ key: db.key, action: "setStatus", id: id, status: status })
+    }).catch(() => {});
   },
 
   render() {
@@ -81,19 +100,30 @@ const DOH_Admin = {
     ]);
   },
 
+  statusBadge(s) {
+    const cls = s === "Approved" ? "pledge" : s === "Rejected" ? "register" : "volunteer";
+    return `<span class="badge ${cls}">${this.esc(s || "Pending")}</span>`;
+  },
+
   renderTable(id, rows, cols) {
     const wrap = document.getElementById(id);
     if (!rows.length) {
-      wrap.innerHTML = '<div class="empty-state">No records yet. Every new submission on the website appears here automatically.</div>';
+      wrap.innerHTML = '<div class="empty-state">No records yet. Every new submission on the website appears here automatically, waiting for your approval.</div>';
       return;
     }
     let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Date</th>';
     cols.forEach(c => (html += `<th>${c[1]}</th>`));
-    html += "</tr></thead><tbody>";
+    html += "<th>Status</th><th>Your Decision</th></tr></thead><tbody>";
     rows.forEach(r => {
       html += `<tr><td><code>${this.esc(r.id)}</code></td><td>${this.esc(new Date(r.date).toLocaleString())}</td>`;
       cols.forEach(c => (html += `<td>${this.esc(r.data[c[0]] || "") || "—"}</td>`));
-      html += "</tr>";
+      html += `<td>${this.statusBadge(r.status)}</td>`;
+      html += `<td style="white-space:nowrap">` +
+        (r.status === "Approved"
+          ? `<button class="btn btn-outline btn-sm" onclick="DOH_Admin.setStatus('${r.id}','Pending')">Undo</button>`
+          : `<button class="btn btn-gold btn-sm" onclick="DOH_Admin.setStatus('${r.id}','Approved')">✓ Approve</button>
+             <button class="btn btn-outline btn-sm" style="border-color:#c0392b;color:#c0392b" onclick="DOH_Admin.setStatus('${r.id}','Rejected')">Reject</button>`) +
+        `</td></tr>`;
     });
     html += "</tbody></table>";
     wrap.innerHTML = html;
@@ -102,13 +132,13 @@ const DOH_Admin = {
   exportCSV(type) {
     const rows = type === "all" ? this.records : this.records.filter(r => r.type === type);
     if (!rows.length) { alert("No records to export."); return; }
-    const keys = new Set(["id", "type", "date"]);
+    const keys = new Set(["id", "type", "date", "status"]);
     rows.forEach(r => Object.keys(r.data).forEach(k => keys.add(k)));
     const cols = [...keys];
     const q = v => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
     let csv = cols.map(q).join(",") + "\n";
     rows.forEach(r => {
-      csv += cols.map(c => q(c === "id" ? r.id : c === "type" ? r.type : c === "date" ? r.date : r.data[c])).join(",") + "\n";
+      csv += cols.map(c => q(c === "id" ? r.id : c === "type" ? r.type : c === "date" ? r.date : c === "status" ? r.status : r.data[c])).join(",") + "\n";
     });
     const blob = new Blob([csv], { type: "text/csv" });
     const a = document.createElement("a");
