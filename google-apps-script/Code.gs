@@ -131,7 +131,7 @@ function doGet(e) {
       status: String(r[10] || "Pending")
     });
   }
-  return out_({ ok: true, count: records.length, records: records });
+  return out_({ ok: true, ver: "DOHF-3-EMAIL", count: records.length, records: records });
 }
 
 
