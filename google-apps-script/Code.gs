@@ -53,12 +53,30 @@ function doPost(e) {
       return out_({ ok: false, error: "record not found" });
     }
 
-    /* Admin approval / rejection */
+    /* Admin approval / rejection  (+ automatic confirmation email to volunteer) */
     if (body.action === "setStatus") {
       var values = sh.getDataRange().getValues();
       for (var i = 1; i < values.length; i++) {
         if (String(values[i][1]) === String(body.id)) {
           sh.getRange(i + 1, 11).setValue(body.status || "Pending");
+          try {
+            var to = String(body.email || "").trim();
+            if (to && to.indexOf("@") > 0 && body.status && body.status !== "Pending") {
+              var vName = String(body.name || "").trim() || "Friend";
+              var approved = (body.status === "Approved");
+              var subject = approved
+                ? "APPROVED - Your registration with Dynasty of Hope Foundation"
+                : "Your registration status - Dynasty of Hope Foundation";
+              var msg = "Dear " + vName + ",\n\n" +
+                (approved
+                  ? "GREAT NEWS! Your registration with Dynasty of Hope Foundation has been APPROVED by the admin.\n\nReference ID: " + body.id + "\n\nWe are excited to have you on board. Our team will contact you soon with the next steps. Please keep this email for your records."
+                  : "Thank you for your interest in Dynasty of Hope Foundation.\n\nAfter careful review, your registration (Reference ID: " + body.id + ") was NOT APPROVED at this time.\n\nThis does not close any doors - you are warmly welcome to apply again for our future programmes and events.") +
+                "\n\n---\nYou can always reach us:\nEmail: Dynastyofhope2023@gmail.com\nPhone: 09036989696, 07033828292\nWhatsApp: https://wa.me/2349036989696\n\nWith hope,\nAdidi Sylvanus Osigbemeh\nProject Coordinator, Dynasty of Hope Foundation";
+              MailApp.sendEmail(to, subject, msg);
+            }
+          } catch (mailErr) {
+            /* never block the status update if email fails */
+          }
           return out_({ ok: true, id: body.id, status: body.status });
         }
       }
@@ -73,6 +91,23 @@ function doPost(e) {
     sh.appendRow([new Date(), body.id || "", body.type || "", name,
                   d.email || "", d.phone || "", eventOrInterest,
                   d.amount || "", msg, JSON.stringify(d), "Pending"]);
+
+    /* Instant receipt email to the volunteer: registration received, awaiting approval */
+    try {
+      var toV = String(d.email || "").trim();
+      if (toV && toV.indexOf("@") > 0) {
+        var vNm = String(name).trim() || "Friend";
+        MailApp.sendEmail(toV,
+          "Registration RECEIVED - Dynasty of Hope Foundation",
+          "Dear " + vNm + ",\n\n" +
+          "Thank you! Your registration with Dynasty of Hope Foundation has been RECEIVED.\n\n" +
+          "Reference ID: " + (body.id || "-") + "\n" +
+          "Current status: PENDING - awaiting admin approval.\n\n" +
+          "You will receive a second email as soon as the admin reviews your registration. Please keep this reference ID safe.\n\n" +
+          "---\nYou can always reach us:\nEmail: Dynastyofhope2023@gmail.com\nPhone: 09036989696, 07033828292\nWhatsApp: https://wa.me/2349036989696\n\nWith hope,\nAdidi Sylvanus Osigbemeh\nProject Coordinator, Dynasty of Hope Foundation");
+      }
+    } catch (receiptErr) { /* never block the submission */ }
+
     return out_({ ok: true, id: body.id, status: "Pending" });
   } catch (err) {
     return out_({ ok: false, error: String(err) });
@@ -97,4 +132,15 @@ function doGet(e) {
     });
   }
   return out_({ ok: true, count: records.length, records: records });
+}
+
+
+/* Run this ONCE in the editor (function dropdown -> selfTest -> Run) to
+   authorize the new email permission. You'll receive a test email. */
+function selfTest() {
+  getSheet_();
+  var me = "Dynastyofhope2023@gmail.com";
+  try { me = Session.getActiveUser().getEmail() || me; } catch (x) {}
+  MailApp.sendEmail(me, "DOHF Tracker self-test OK",
+    "Your tracker can now send approval/rejection confirmation emails to volunteers.\n\n- Dynasty of Hope Foundation Tracker");
 }

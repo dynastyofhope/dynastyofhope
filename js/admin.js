@@ -67,12 +67,37 @@ const DOH_Admin = {
     if (!rec) return;
     rec.status = status;               // optimistic update
     this.render();
+    const vEmail = (rec.data && (rec.data.email || rec.data["e-mail"] || "")) || "";
+    const vName  = (rec.data && (rec.data.name || rec.data.fullname || "")) || "";
     fetch(db.url, {
       method: "POST",
       mode: "no-cors",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ key: db.key, action: "setStatus", id: id, status: status })
+      body: JSON.stringify({ key: db.key, action: "setStatus", id: id, status: status, email: vEmail, name: vName })
     }).catch(() => {});
+    if (status !== "Pending" && vEmail) {
+      const line = document.getElementById("online-status");
+      if (line) line.textContent += " · confirmation email sent to " + vEmail;
+    }
+  },
+
+  /* ---- WhatsApp quick confirmation to the volunteer ---- */
+  waSend(id) {
+    const rec = this.records.find(r => r.id === id);
+    if (!rec) return;
+    const d = rec.data || {};
+    let phone = String(d.phone || d.tel || d.whatsapp || "").replace(/\D/g, "");
+    if (!phone) { alert("No phone number on this record."); return; }
+    if (phone.startsWith("0")) phone = "234" + phone.slice(1);
+    else if (!phone.startsWith("234")) phone = "234" + phone;
+    const name = d.name || d.fullname || "Friend";
+    const st = rec.status || "Pending";
+    const text = st === "Approved"
+      ? `Hello ${name}! 🎉 GREAT NEWS: your registration with Dynasty of Hope Foundation (Ref: ${rec.id}) has been APPROVED. Our team will contact you soon with next steps. — Adidi Sylvanus Osigbemeh, Project Coordinator`
+      : st === "Rejected"
+      ? `Hello ${name}. Thank you for your interest in Dynasty of Hope Foundation. After review, your registration (Ref: ${rec.id}) was not approved this time, but you are warmly welcome to apply for our future programmes. — Project Coordinator`
+      : `Hello ${name}! Your registration with Dynasty of Hope Foundation (Ref: ${rec.id}) has been RECEIVED and is awaiting admin review. Thank you! — Project Coordinator`;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank");
   },
 
   /* ---- delete a record permanently ---- */
@@ -141,7 +166,7 @@ const DOH_Admin = {
     }
     let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Date</th>';
     cols.forEach(c => (html += `<th>${c[1]}</th>`));
-    html += "<th>Status</th><th>Actions (Approve / Reject / Delete)</th></tr></thead><tbody>";
+    html += "<th>Status</th><th>Actions (Approve / Reject / Notify / Delete)</th></tr></thead><tbody>";
     rows.forEach(r => {
       html += `<tr><td><code>${this.esc(r.id)}</code></td><td>${this.esc(new Date(r.date).toLocaleString())}</td>`;
       cols.forEach(c => (html += `<td>${this.esc(r.data[c[0]] || "") || "—"}</td>`));
@@ -151,7 +176,8 @@ const DOH_Admin = {
           ? `<button class="btn btn-outline btn-sm" onclick="DOH_Admin.setStatus('${r.id}','Pending')">Undo</button>`
           : `<button class="btn btn-gold btn-sm" onclick="DOH_Admin.setStatus('${r.id}','Approved')">✓ Approve</button>
              <button class="btn btn-outline btn-sm" style="border-color:#c0392b;color:#c0392b" onclick="DOH_Admin.setStatus('${r.id}','Rejected')">Reject</button>`) +
-        ` <button class="btn btn-outline btn-sm" style="border-color:#c0392b;color:#c0392b" title="Delete permanently" onclick="DOH_Admin.deleteRecord('${r.id}')">🗑 Delete</button>` +
+        ` <button class="btn btn-outline btn-sm" style="border-color:#25d366;color:#128c4a" title="Send WhatsApp confirmation" onclick="DOH_Admin.waSend('${r.id}')">💬 WhatsApp</button>` +
+        `<button class="btn btn-outline btn-sm" style="border-color:#c0392b;color:#c0392b" title="Delete permanently" onclick="DOH_Admin.deleteRecord('${r.id}')">🗑 Delete</button>` +
         `</td></tr>`;
     });
     html += "</tbody></table>";
